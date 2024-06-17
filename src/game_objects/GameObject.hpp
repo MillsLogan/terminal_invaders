@@ -5,7 +5,7 @@
 #include "Sprite.hpp"
 
 class GameObject{
-    private:
+    protected:
         int x;
         int y;
         int width;
@@ -14,11 +14,12 @@ class GameObject{
         std::pair<int, int> previousPosition;
     public:
         GameObject(int x, int y, int width, int height, Sprite *sprite);
-        bool move(int x, int y);
+        void move(int x, int y);
         void draw();
-        bool setPosition(int x, int y);
+        void setPosition(int x, int y);
         std::pair<int, int> getPosition();
         std::pair<int, int> getSize();
+        ~GameObject();
 };
 
 

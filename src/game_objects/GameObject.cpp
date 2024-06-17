@@ -7,22 +7,18 @@ GameObject::GameObject(int x, int y, int width, int height, Sprite* sprite){
     this->width = width;
     this->height = height;
     this->sprite = sprite;
-    this->previousPosition = std::make_pair(x, y);
+    this->previousPosition = std::make_pair(-1, -1);
 }
 
-bool GameObject::move(int x, int y){
+void GameObject::move(int x, int y){
     int newX = this->x + x;
     int newY = this->y + y;
-    return setPosition(newX, newY);
+    setPosition(newX, newY);
 }
 
-bool GameObject::setPosition(int x, int y){
-    if(x < 0 || x >= COLS || y < 0 || y >= LINES){
-        return false;
-    }
+void GameObject::setPosition(int x, int y){
     this->x = x;
     this->y = y;
-    return true;
 }
 
 std::pair<int, int> GameObject::getPosition(){
@@ -41,5 +37,9 @@ void GameObject::draw(){
         sprite->draw(x, y);
         previousPosition = std::make_pair(x, y);
     }
+}
+
+GameObject::~GameObject(){
+    delete sprite;
 }
 

@@ -3,19 +3,29 @@
 
 #include <ncurses.h>
 #include <vector>
+#include "game_objects/Player.hpp"
+#include "game_objects/Enemy.hpp"
 
 class Game{
     private:
-        Player player;
-        std::vector<Enemy> enemies;
-        std::vector<Projectile> projectiles;
+        Player *player;
+        std::vector<Enemy*> enemies;
+        int enemyMovementDirection;
+        // std::vector<Projectile> projectiles;
+        int height, width;
         bool running;
-    public:
-        Game();
         void showWelcomeScreen();
+        void showGameScreen();
+        WINDOW *gameWindow;
+        void init();
+        bool verifyTerminalSize();
+        void initGameObjects();
+        void update();
+    public:
+        Game(int height, int width);
         void start();
         void stop();
-        bool isRunning();
+        ~Game();
 };
 
 #endif
