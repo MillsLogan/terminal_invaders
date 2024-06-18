@@ -15,6 +15,8 @@ class Game{
         int enemyUpdateCounter;
         int enemyUpdateRate;
         bool running;
+        int projectileTimeout;
+        int projectileTimeoutCounter;
         
         int height, width;
         WINDOW* gameWindow;

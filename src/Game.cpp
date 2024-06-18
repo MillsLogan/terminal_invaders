@@ -14,6 +14,8 @@ Game::Game(int height, int width, int enemyUpdateRate){
     enemyUpdateCounter = 0;
     this->enemyUpdateRate = enemyUpdateRate;
     this->sprites = std::unordered_map<std::string, std::shared_ptr<Sprite> >();
+    this->projectileTimeout = 50;
+    this->projectileTimeoutCounter = this->projectileTimeout;
 }
 
 void Game::init(){
@@ -21,9 +23,12 @@ void Game::init(){
     cbreak();
     noecho();
     start_color();
-    if(!verifyTerminalSize()){
-        endwin();
-        std::cout << "Terminal size is too small" << std::endl;
+    while(!verifyTerminalSize()){
+        // std::cout << "Terminal size is too small" << std::endl;
+        // box(gameWindow, 0, 0);
+        // wrefresh(gameWindow);
+        // mvwprintw(gameWindow, 1, 1, "Terminal size is too small, resize until you can see the entire window");
+        // wgetch(gameWindow);
         exit(1);
     }
     gameWindow = newwin(height, width, (LINES - height)/2, (COLS - width)/2);
@@ -76,8 +81,8 @@ void Game::initGameObjects(){
     sprites["beam"] = std::make_shared<Sprite>(Sprite(gameWindow, 3, beamSprite));
 
     for(int i = 1; i <= 5; i++){
-        for(int j = 1; j <= 10; j++){
-            enemies.push_back(Enemy(j * 5, i * 3, sprites["enemy"], 1 + j * 5, width - 5 - (10 - j) * 5));
+        for(int j = 1; j <= 11; j++){
+            enemies.push_back(Enemy(j * 5, i * 3, sprites["enemy"], 1 + j * 5, width - 5 - (11 - j) * 5));
         }
     }
     
@@ -106,11 +111,26 @@ void Game::start(){
         }else if(input == KEY_RIGHT){
             player->move(1, 0);
         }else if(input == KEY_UP){
-            projectiles.push_back(Projectile(player->getPosition().first + 1, player->getPosition().second - 1, sprites["beam"], std::make_pair(0, -1)));
+            if(projectileTimeoutCounter == projectileTimeout){
+                projectileTimeoutCounter = 0;
+                projectiles.push_back(Projectile(player->getPosition().first + 1, player->getPosition().second - 1, sprites["beam"], std::make_pair(0, -1)));
+            }
+        }
+
+        if(projectileTimeoutCounter < projectileTimeout){
+            projectileTimeoutCounter++;
         }
 
         update();
-
+        if(enemies.size() == 0){
+            stop();
+            wclear(gameWindow);
+            mvwprintw(gameWindow, height/2, width/2, "You win!");
+            wrefresh(gameWindow);
+            nodelay(gameWindow, FALSE);
+            wgetch(gameWindow);
+            break;
+        }
         usleep(1000000/60);
     }
 }

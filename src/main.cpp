@@ -4,7 +4,7 @@
 
 int main(){
     int input;
-    Game game = Game(40, 200, 2);
+    Game game = Game(40, 100, 10);
     game.start();
 
     return 0;
