@@ -1,9 +1,11 @@
 #include "Game.hpp"
 #include <ncurses.h>
 #include <iostream>
-#include "game_objects/Player.hpp"
-#include "game_objects/Enemy.hpp"
+#include "game_objects/player/Player.hpp"
+#include "game_objects/enemies/Enemy.hpp"
 #include <unistd.h>
+#include <memory>
+#include <algorithm>
 
 Game::Game(int height, int width, int enemyUpdateRate){
     this->height = height;
@@ -11,6 +13,7 @@ Game::Game(int height, int width, int enemyUpdateRate){
     running = false;
     enemyUpdateCounter = 0;
     this->enemyUpdateRate = enemyUpdateRate;
+    this->sprites = std::unordered_map<std::string, std::shared_ptr<Sprite> >();
 }
 
 void Game::init(){
@@ -36,6 +39,9 @@ bool Game::verifyTerminalSize(){
 void Game::showWelcomeScreen(){
     init();
     init_pair(1, COLOR_CYAN, COLOR_BLACK);
+    init_pair(2, COLOR_RED, COLOR_BLACK);
+    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+
     wattron(gameWindow, COLOR_PAIR(1));
 
     mvwprintw(gameWindow, 1, 1, "Welcome to the game");
@@ -62,18 +68,27 @@ void Game::initGameObjects(){
 
     std::vector<std::string> enemySprite;
     enemySprite.push_back("/0\\");
-    
-    currentEnemyMovement = std::pair<int, int>(1, 0);
+    std::vector<std::string> beamSprite;
+    beamSprite.push_back("|");
 
-    enemies.push_back(new Enemy(10, 10, 3, 3, new Sprite(gameWindow, "red", enemySprite)));
-    enemies.push_back(new Enemy(15, 10, 3, 3, new Sprite(gameWindow, "red", enemySprite)));
-    for(int i = 0; i < enemies.size(); i++){
-        enemies[i]->draw();
+    sprites["player"] = std::make_shared<Sprite>(Sprite(gameWindow, 1, playerSprite));
+    sprites["enemy"] = std::make_shared<Sprite>(Sprite(gameWindow, 2, enemySprite));
+    sprites["beam"] = std::make_shared<Sprite>(Sprite(gameWindow, 3, beamSprite));
+
+    for(int i = 1; i <= 5; i++){
+        for(int j = 1; j <= 10; j++){
+            enemies.push_back(Enemy(j * 5, i * 3, sprites["enemy"], 1 + j * 5, width - 5 - (10 - j) * 5));
+        }
+    }
+    
+    
+    for(auto &enemy : enemies){
+        enemy.draw();
     }
 
-    Sprite *sprite = new Sprite(gameWindow, "cyan", playerSprite);
-    player = new Player(10, height - 5, 3, 5, sprite);
+    player = new Player(10, height - 5, sprites["player"]);
     player->draw();
+    wrefresh(gameWindow);
 }
 
 void Game::start(){
@@ -90,29 +105,14 @@ void Game::start(){
             player->move(-1, 0);
         }else if(input == KEY_RIGHT){
             player->move(1, 0);
+        }else if(input == KEY_UP){
+            projectiles.push_back(Projectile(player->getPosition().first + 1, player->getPosition().second - 1, sprites["beam"], std::make_pair(0, -1)));
         }
 
         update();
 
         usleep(1000000/60);
     }
-}
-
-void Game::updateEnemiesDirection(std::pair<int, int> nextEnemyMovement){
-    // If the enemies have not moved down yet, we can keep moving them the same way/use the new direction variable
-    if(currentEnemyMovement != std::pair<int, int>(0,1)){
-        currentEnemyMovement = nextEnemyMovement;
-        return;
-    }
-    // If the enemies have moved down, we need to move them in the other direction
-    if(enemies[0]->getPosition().first == 1){
-        // If the enemy in the leftmost position has reached the leftmost wall, we need to move them to the right
-        currentEnemyMovement.first = 1;
-    }else{
-        // If the enemy in the rightmost position has reached the rightmost wall, we need to move them to the left
-        currentEnemyMovement.first = -1;
-    }
-    currentEnemyMovement.second = 0;
 }
 
 void Game::updateEnemies(){
@@ -122,29 +122,60 @@ void Game::updateEnemies(){
     }
 
     enemyUpdateCounter = 0;
-    std::pair<int, int> nextEnemyMovement = currentEnemyMovement;
     
-    for(auto &enemy : enemies){
-        enemy->move(currentEnemyMovement.first, currentEnemyMovement.second);
-        if(enemy->getPosition().first == 1 || enemy->getPosition().first == width - 1 - enemy->getSize().first){
-            nextEnemyMovement.first = 0;
-            nextEnemyMovement.second = 1;
-        }
+    for(Enemy &enemy : enemies){
+        enemy.move();
     }
 
-    updateEnemiesDirection(nextEnemyMovement);
+    for(Enemy &enemy : enemies){
+        enemy.draw();
+    }
+}
 
-    for(int i = 0; i < enemies.size(); i++){
-        enemies[i]->draw();
+void Game::updateProjectiles(){
+    for(auto it = projectiles.begin(); it != projectiles.end();){
+        it->move();
+        if(it->getPosition().second < 1 || it->getPosition().second > height-1){
+            it = projectiles.erase(it);
+        }else{
+            it->draw();
+        }
+        it++;
     }
 }
 
 void Game::update(){
     player->draw();
 
+    updateProjectiles();
     updateEnemies();
+    checkCollisions();
+    updateStats();
 
     wrefresh(gameWindow);
+}
+
+void Game::checkCollisions(){
+    for(auto it = projectiles.begin(); it != projectiles.end();){
+        for(auto enemy = enemies.begin(); enemy != enemies.end();){
+            if(it->getPosition().first >= enemy->getPosition().first && it->getPosition().first < enemy->getPosition().first + enemy->getSize().first){
+                if(it->getPosition().second >= enemy->getPosition().second && it->getPosition().second < enemy->getPosition().second + enemy->getSize().second){
+                    it = projectiles.erase(it);
+                    enemy = enemies.erase(enemy);
+                    break;
+                }
+            }
+            enemy++;
+        }
+        it++;
+    }
+}
+
+void Game::updateStats(){
+    mvwprintw(gameWindow, 1, 1, "Press 'q' to quit");
+    mvwprintw(gameWindow, 2, 1, "Player position: %d, %d", player->getPosition().first, player->getPosition().second);
+    mvwprintw(gameWindow, 3, 1, "Enemies: %d", enemies.size());
+    mvwprintw(gameWindow, 4, 1, "Projectiles: %d", projectiles.size());
 }
 
 void Game::stop(){

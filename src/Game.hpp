@@ -3,28 +3,37 @@
 
 #include <ncurses.h>
 #include <vector>
-#include "game_objects/Player.hpp"
-#include "game_objects/Enemy.hpp"
+#include "game_objects/player/Player.hpp"
+#include "game_objects/enemies/Enemy.hpp"
+#include "game_objects/projectiles/Projectile.hpp"
+#include <list>
+#include <memory>
+#include <unordered_map>
 
 class Game{
     private:
-        Player *player;
-        std::vector<Enemy*> enemies;
-        std::pair<int, int> currentEnemyMovement;
         int enemyUpdateCounter;
         int enemyUpdateRate;
-        // std::vector<Projectile> projectiles;
-        int height, width;
         bool running;
+        
+        int height, width;
+        WINDOW* gameWindow;
+
+        Player *player;
+        std::list<Enemy> enemies;
+        std::list<Projectile> projectiles;
+        std::unordered_map<std::string, std::shared_ptr<Sprite> > sprites;
+        
+        void updateProjectiles();
         void showWelcomeScreen();
         void showGameScreen();
         void updateEnemies();
-        void updateEnemiesDirection(std::pair<int, int> nextEnemyMovement);
-        WINDOW *gameWindow;
         void init();
         bool verifyTerminalSize();
         void initGameObjects();
         void update();
+        void updateStats();
+        void checkCollisions();
     public:
         Game(int height, int width, int enemyUpdateRate);
         void start();

@@ -1,20 +1,19 @@
 #ifndef PLAYER_HPP
 #define PLAYER_HPP
 
-#include "GameObject.hpp"
-#include "Sprite.hpp"
+#include "../GameObject.hpp"
+#include "../sprite/Sprite.hpp"
 
 class Player : public GameObject{
     private:
         int health;
         int score;
-        int speed;
     public:
-        Player(int x, int y, int width, int height, Sprite *sprite);
+        Player(int x, int y, std::shared_ptr<Sprite> sprite, int speed);
+        Player(int x, int y, std::shared_ptr<Sprite> sprite);
         void move(int x, int y);
         void setHealth(int health);
         void setScore(int score);
-        void setSpeed(int speed);
         int getHealth();
         int getScore();
 };

@@ -1,18 +1,25 @@
 #include "GameObject.hpp"
 #include <ncurses.h>
 
-GameObject::GameObject(int x, int y, int width, int height, Sprite* sprite){
+GameObject::GameObject(int x, int y, std::shared_ptr<Sprite> sprite){
     this->x = x;
     this->y = y;
-    this->width = width;
-    this->height = height;
     this->sprite = sprite;
+    this->speed = 1;
+    this->previousPosition = std::make_pair(-1, -1);
+}
+
+GameObject::GameObject(int x, int y, std::shared_ptr<Sprite> sprite, int speed){
+    this->x = x;
+    this->y = y;
+    this->sprite = sprite;
+    this->speed = speed;
     this->previousPosition = std::make_pair(-1, -1);
 }
 
 void GameObject::move(int x, int y){
-    int newX = this->x + x;
-    int newY = this->y + y;
+    int newX = this->x + x * speed;
+    int newY = this->y + y * speed;
     setPosition(newX, newY);
 }
 
@@ -26,7 +33,7 @@ std::pair<int, int> GameObject::getPosition(){
 }
 
 std::pair<int, int> GameObject::getSize(){
-    return std::make_pair(width, height);
+    return std::make_pair(sprite->getWidth(), sprite->getHeight());
 }
 
 void GameObject::draw(){
@@ -40,6 +47,5 @@ void GameObject::draw(){
 }
 
 GameObject::~GameObject(){
-    delete sprite;
+    sprite->clear(previousPosition.first, previousPosition.second);
 }
-

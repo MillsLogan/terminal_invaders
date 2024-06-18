@@ -2,7 +2,7 @@
 #include <ncurses.h>
 
 
-Sprite::Sprite(WINDOW *windowReference, std::string color, std::vector<std::string> sprite){
+Sprite::Sprite(WINDOW *windowReference, int color, std::vector<std::string> sprite){
     this->windowReference = windowReference;
     this->color = color;
     this->sprite = sprite;
@@ -23,15 +23,23 @@ std::vector<std::string> Sprite::initClearSprite(){
 }
 
 void Sprite::draw(int x, int y){
-    wattron(windowReference, COLOR_PAIR(1));
+    wattron(windowReference, COLOR_PAIR(color));
     for(int i = 0; i < sprite.size(); i++){
         mvwprintw(windowReference, y + i, x, sprite[i].c_str());
     }
-    wattroff(windowReference, COLOR_PAIR(1));
+    wattroff(windowReference, COLOR_PAIR(color));
 }
 
 void Sprite::clear(int x, int y){
     for(int i = 0; i < clearSprite.size(); i++){
         mvwprintw(windowReference, y + i, x, clearSprite[i].c_str());
     }
+}
+
+int Sprite::getWidth(){
+    return sprite[0].size();
+}
+
+int Sprite::getHeight(){
+    return sprite.size();
 }
