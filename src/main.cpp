@@ -3,9 +3,8 @@
 
 
 int main(){
-    int input;
     Game game = Game(40, 100, 10);
     game.start();
-
+    endwin(); // Clean up on game win
     return 0;
 }

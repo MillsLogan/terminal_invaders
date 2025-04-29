@@ -1,5 +1,6 @@
 #include "Sprite.hpp"
 #include <ncurses.h>
+#include <string>
 
 
 Sprite::Sprite(WINDOW *windowReference, int color, std::vector<std::string> sprite){
@@ -11,10 +12,10 @@ Sprite::Sprite(WINDOW *windowReference, int color, std::vector<std::string> spri
 
 std::vector<std::string> Sprite::initClearSprite(){
     std::vector<std::string> clearSprite;
-    for(int i = 0; i < sprite.size(); i++){
+    for(unsigned long i = 0; i < sprite.size(); i++){
         clearSprite.push_back("");
 
-        for(int j = 0; j < sprite[i].size(); j++){
+        for(unsigned long j = 0; j < sprite[i].size(); j++){
             clearSprite[i] += " ";
         }
     }
@@ -24,14 +25,14 @@ std::vector<std::string> Sprite::initClearSprite(){
 
 void Sprite::draw(int x, int y){
     wattron(windowReference, COLOR_PAIR(color));
-    for(int i = 0; i < sprite.size(); i++){
+    for(unsigned long i = 0; i < sprite.size(); i++){
         mvwprintw(windowReference, y + i, x, sprite[i].c_str());
     }
     wattroff(windowReference, COLOR_PAIR(color));
 }
 
 void Sprite::clear(int x, int y){
-    for(int i = 0; i < clearSprite.size(); i++){
+    for(unsigned long i = 0; i < clearSprite.size(); i++){
         mvwprintw(windowReference, y + i, x, clearSprite[i].c_str());
     }
 }

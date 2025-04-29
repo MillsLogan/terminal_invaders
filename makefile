@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -g -Wall -std=c++20 -Wc++20-extensions
+CFLAGS = -g -Wall -std=c++20 -pedantic
 DEPFLAGS = -MMD -MP
 
 # Define directories

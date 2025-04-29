@@ -2,6 +2,7 @@
 #define GAMEOBJECT_HPP
 
 #include <string>
+#include <memory>
 #include "sprite/Sprite.hpp"
 
 class GameObject{

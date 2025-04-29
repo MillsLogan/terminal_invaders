@@ -23,14 +23,16 @@ void Game::init(){
     cbreak();
     noecho();
     start_color();
+    
     while(!verifyTerminalSize()){
-        // std::cout << "Terminal size is too small" << std::endl;
-        // box(gameWindow, 0, 0);
-        // wrefresh(gameWindow);
-        // mvwprintw(gameWindow, 1, 1, "Terminal size is too small, resize until you can see the entire window");
-        // wgetch(gameWindow);
+        endwin();
+        std::cout << "Terminal size is too small" << std::endl;
+        std::cout << "Please resize the terminal window to at least " << height << "x" << width << std::endl;
+        std::cout << "Press any key to continue" << std::endl;
+        std::cout << "Current size: " << LINES << "x" << COLS << std::endl;
         exit(1);
     }
+
     gameWindow = newwin(height, width, (LINES - height)/2, (COLS - width)/2);
     box(gameWindow, 0, 0);
     keypad(gameWindow, TRUE);
@@ -129,6 +131,7 @@ void Game::start(){
             wrefresh(gameWindow);
             nodelay(gameWindow, FALSE);
             wgetch(gameWindow);
+            std::cout << "You win!" << std::endl;
             break;
         }
         usleep(1000000/60);
@@ -145,6 +148,16 @@ void Game::updateEnemies(){
     
     for(Enemy &enemy : enemies){
         enemy.move();
+        if (enemy.getPosition().second > height - 6) {
+            running = false;
+            wclear(gameWindow);
+            mvwprintw(gameWindow, height/2, width/2, "Game Over");
+            wrefresh(gameWindow);
+            wgetch(gameWindow);
+            endwin();
+            std::cout << "Game Over" << std::endl;
+            exit(0);            
+        }
     }
 
     for(Enemy &enemy : enemies){
@@ -194,8 +207,8 @@ void Game::checkCollisions(){
 void Game::updateStats(){
     mvwprintw(gameWindow, 1, 1, "Press 'q' to quit");
     mvwprintw(gameWindow, 2, 1, "Player position: %d, %d", player->getPosition().first, player->getPosition().second);
-    mvwprintw(gameWindow, 3, 1, "Enemies: %d", enemies.size());
-    mvwprintw(gameWindow, 4, 1, "Projectiles: %d", projectiles.size());
+    mvwprintw(gameWindow, 3, 1, "Enemies: %ld", enemies.size());
+    mvwprintw(gameWindow, 4, 1, "Projectiles: %ld", projectiles.size());
 }
 
 void Game::stop(){
